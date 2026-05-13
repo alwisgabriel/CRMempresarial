@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: senaisales-db
+    environment:
+      POSTGRES_DB: senaisales
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: senha123
+    ports:
+      - "5432:5432"
