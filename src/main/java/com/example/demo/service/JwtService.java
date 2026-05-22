@@ -2,12 +2,11 @@ package com.example.demo.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 // Serviço responsável por gerar e validar tokens JWT.
@@ -21,17 +20,18 @@ public class JwtService {
     private static final long EXPIRACAO = 1000 * 60 * 60 * 24;
 
     // Gera a chave de assinatura a partir da chave secreta.
-    private Key getSigningKey() {
+    // Atualizado: agora retorna SecretKey em vez de Key
+    private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
     // Gera um token JWT para o usuário autenticado.
     public String gerarToken(UserDetails userDetails) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername()) // email do usuário
-                .setIssuedAt(new Date())               // data de criação
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRACAO)) // data de expiração
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // assina com a chave secreta
+                .subject(userDetails.getUsername()) // antigo setSubject
+                .issuedAt(new Date())               // antigo setIssuedAt
+                .expiration(new Date(System.currentTimeMillis() + EXPIRACAO)) // antigo setExpiration
+                .signWith(getSigningKey())          // antigo signWith (agora infere o algoritmo automaticamente)
                 .compact();
     }
 
@@ -52,10 +52,10 @@ public class JwtService {
 
     // Extrai todas as informações (claims) contidas no token.
     private Claims extrairClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(getSigningKey()) // antigo setSigningKey
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)    // antigo parseClaimsJws
+                .getPayload();               // antigo getBody
     }
 }
